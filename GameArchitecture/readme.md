@@ -9,10 +9,31 @@ Nothing is settled, and I'm also discovering some patterns as I go, which is why
 ## Architecture flow at start (on going)
 
 ```mermaid
-graph TD
-    A[Start] --> B{Is it working?}
-    B -->|Yes| C[Great!]
-    B -->|No| D[Check Documentation]
-    D --> E[Try Again]
-    E --> B
+sequenceDiagram
+    participant GameManager
+    participant EventChannel
+    participant LevelManager
+    participant PlatformBehaviour
+
+    %% Core Initialization
+    GameManager->>LevelManager: Initialize(events, levels, prefab, theme)
+    LevelManager->>EventChannel: Subscribe OnLevelLoad
+
+    %% Game Start
+    GameManager->>EventChannel: RaiseGameInitialized
+    GameManager->>EventChannel: RaiseGameStarted
+    GameManager->>EventChannel: RaiseLevelLoad(0)
+
+    %% Level Setup
+    EventChannel->>LevelManager: LoadLevel(0)
+    LevelManager->>LevelManager: Clear Current Level
+    loop Each Platform in Level
+        LevelManager->>PlatformBehaviour: Instantiate & Initialize
+        PlatformBehaviour->>EventChannel: Subscribe Events
+    end
+
+    %% Game Loop
+    Note over GameManager,PlatformBehaviour: Game Running
+    PlatformBehaviour->>EventChannel: RaisePlatformVisited
+    EventChannel->>LevelManager: Check Win Condition
 ```
