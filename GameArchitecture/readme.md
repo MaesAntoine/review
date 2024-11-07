@@ -10,30 +10,34 @@ Nothing is settled, and I'm also discovering some patterns as I go, which is why
 
 ```mermaid
 sequenceDiagram
+    participant Launch
     participant GameManager
     participant EventChannel
+    participant Components
     participant LevelManager
-    participant PlatformBehaviour
+    participant UI
 
-    %% Core Initialization
-    GameManager->>LevelManager: Initialize(events, levels, prefab, theme)
-    LevelManager->>EventChannel: Subscribe OnLevelLoad
+    Launch->>GameManager: 1. Initialize Core
+    Note right of GameManager: Singleton setup and validation
 
-    %% Game Start
-    GameManager->>EventChannel: RaiseGameInitialized
-    GameManager->>EventChannel: RaiseGameStarted
-    GameManager->>EventChannel: RaiseLevelLoad(0)
+    GameManager->>EventChannel: 2. Setup Event Channel
+    Note right of EventChannel: Core event system ready
 
-    %% Level Setup
-    EventChannel->>LevelManager: LoadLevel(0)
-    LevelManager->>LevelManager: Clear Current Level
-    loop Each Platform in Level
-        LevelManager->>PlatformBehaviour: Instantiate & Initialize
-        PlatformBehaviour->>EventChannel: Subscribe Events
-    end
+    GameManager->>Components: 3. Initialize Components
+    Note right of Components: ThemeManager, InputManager initialized
 
-    %% Game Loop
-    Note over GameManager,PlatformBehaviour: Game Running
-    PlatformBehaviour->>EventChannel: RaisePlatformVisited
-    EventChannel->>LevelManager: Check Win Condition
+    Components->>EventChannel: 4. Subscribe to Events
+    Note right of EventChannel: Components listening for events
+
+    GameManager->>UI: 5. Initialize UI Components
+    Note right of UI: UI systems ready
+
+    UI->>EventChannel: 6. Subscribe to UI Events
+    Note right of EventChannel: UI listening for game events
+
+    GameManager->>EventChannel: 7. Trigger Game Start
+    Note right of EventChannel: RaiseGameInitialized & RaiseGameStarted
+
+    EventChannel->>LevelManager: 8. Load Initial Level
+    Note right of LevelManager: Load Level 0, instantiate platforms
 ```
